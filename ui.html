@@ -1,25 +1,155 @@
-<link rel="stylesheet" type="text/css" href="ui.css">
 <style>
   body {
     background-color: var(--figma-color-bg);
     color: var(--figma-color-text);
     font-family: sans-serif;
   }
+  .container {
+    width: 100%;
+    height: 100%;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--figma-color-border) var(--figma-color-bg);
+  }
+  .description {
+    width: 100%;
+    height: 100px;
+    padding: 10px;
+    border-radius: 4px;
+    border: 1px solid var(--figma-color-border);
+    background-color: var(--figma-color-bg);
+    color: var(--figma-color-text);
+    font-size: 14px;
+    resize: none;
+    scrollbar-width: thin;
+    scrollbar-color: var(--figma-color-border) var(--figma-color-bg);
+  }
+  #create,
+  #cancel {
+    background-color: var(--figma-color-bg-secondary);
+    color: var(--figma-color-text);
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    margin-top: 10px;
+  }
+  #create:hover,
+  #cancel:hover {
+    background-color: var(--figma-color-bg-selected);
+  }
+
+  .upload-button, .screen-shot-button {
+    display: inline-block;
+    padding: 0.5rem 1rem;
+    border: 2px solid #b2bec3;
+    border-radius: 8px;
+    background-color:  var(--figma-color-bg);
+    color: var(--figma-color-text);
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    text-align: center;
+    transition: background-color 0.3s ease, color 0.3s ease,
+    border-color 0.3s ease;
+  }
+
+  .upload-button:hover, .screen-shot-button:hover{
+    background-color: var(--figma-color-bg-selected);
+  }
+
+  .upload-input {
+    display: none;
+  }
+
+  .hidden{
+    display: none;
+  }
+
+  div > #upload-image {
+    margin-top: 0.5rem;
+    width: 10rem;
+    height: 10rem;
+  }
+  #upload-image {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    border-radius: 8px;
+    border: 0.2rem solid var(--figma-color-text);
+  }
+  .actions {
+    display: flex;
+    justify-content: start;
+    gap: 1rem;
+    align-items: center;
+    margin-top: 0.5rem;
+  }
 </style>
-<h2>Shape Creator</h2>
-<p class="paragraph"">Count: <input id="count" type="number" value="5"></p>
-<button id="create">Create</button>
-<button id="cancel">Cancel</button>
+
+<div class="container">
+  <textarea
+    class="description"
+    name="description"
+    id="description"
+    rows="5"
+    placeholder="Description"
+  ></textarea>
+  <div class="actions">
+    <div>
+      <label class="upload-button" for="file-upload">Upload a file</label>
+      <input type="file" id="file-upload" class="upload-input" />
+    </div>
+    <button type="button" class="screen-shot-button">Screen Shot</button>
+  </div>
+  
+
+  <div>
+    <img id="upload-image" src="" alt="" class="hidden" />
+  </div>
+
+  <div id="data">json</div>
+
+  <button id="create">Create</button>
+  <button id="cancel">Cancel</button>
+</div>
+
 <script>
 
-document.getElementById('create').onclick = () => {
-  const textbox = document.getElementById('count');
-  const count = parseInt(textbox.value, 10);
-  parent.postMessage({ pluginMessage: { type: 'create-shapes', count } }, '*')
-}
+  document.getElementById("file-upload").onchange = (event) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = document.getElementById(`upload-image`);
+        img.classList.remove("hidden");
+        img.src = e.target?.result;
+        field.onchange(file);
+      };
+      reader.readAsDataURL(file);
 
-document.getElementById('cancel').onclick = () => {
-  parent.postMessage({ pluginMessage: { type: 'cancel' } }, '*')
-}
+    }
+  }
 
+  document.getElementById("create").onclick = () => {
+    const description = document.getElementById("description");
+
+    const data = fetch("https://jsonplaceholder.typicode.com/todos/1")
+      .then((response) => response.json())
+      .then(
+        (json) =>
+          (document.getElementById("data").innerHTML = JSON.stringify(
+            json,
+            null,
+            2
+          ))
+      );
+
+    // parent.postMessage({ pluginMessage: { type: 'execute', description } }, '*')
+  };
+
+  document.getElementById("cancel").onclick = () => {
+    parent.postMessage({ pluginMessage: { type: "cancel" } }, "*");
+  };
 </script>
