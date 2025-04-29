@@ -24,6 +24,17 @@
     scrollbar-width: thin;
     scrollbar-color: var(--figma-color-border) var(--figma-color-bg);
   }
+  .format {
+    margin-top: 0.5rem;
+    width: 100%;
+    height: 40px;
+    padding: 10px;
+    border-radius: 4px;
+    border: 1px solid var(--figma-color-border);
+    background-color: var(--figma-color-bg);
+    color: var(--figma-color-text);
+    font-size: 14px;
+  }
   #create,
   #cancel {
     background-color: var(--figma-color-bg-secondary);
@@ -96,12 +107,17 @@
     rows="5"
     placeholder="Description"
   ></textarea>
+  <select class="format">
+    <option value="" selected></option>
+    <option value="1">Option 1</option>
+    <option value="2">Option 2</option>
+  </select>
   <div class="actions">
     <div>
       <label class="upload-button" for="file-upload">Upload a file</label>
       <input type="file" id="file-upload" class="upload-input" />
     </div>
-    <button type="button" class="screen-shot-button">Screen Shot</button>
+    <button type="button" class="screen-shot-button" id="screenshot">Screen Shot</button>
   </div>
   
 
@@ -132,24 +148,26 @@
     }
   }
 
+  document.getElementById("screenshot").onclick = () => {
+    const description = document.getElementById("description").value;
+    parent.postMessage({pluginMessage: { type: 'screenshot', description } }, '*')
+  };
+
   document.getElementById("create").onclick = () => {
-    const description = document.getElementById("description");
-
-    const data = fetch("https://jsonplaceholder.typicode.com/todos/1")
-      .then((response) => response.json())
-      .then(
-        (json) =>
-          (document.getElementById("data").innerHTML = JSON.stringify(
-            json,
-            null,
-            2
-          ))
-      );
-
-    // parent.postMessage({ pluginMessage: { type: 'execute', description } }, '*')
+    const description = document.getElementById("description").value;
+    parent.postMessage({pluginMessage: { type: 'execute', description } }, '*')
   };
 
   document.getElementById("cancel").onclick = () => {
     parent.postMessage({ pluginMessage: { type: "cancel" } }, "*");
   };
+
+
+  onmessage = (event) => {
+    const base64 = event.data.pluginMessage;
+    const img = document.getElementById(`upload-image`);
+    img.classList.remove("hidden");
+    img.src = `data:image/png;base64,${base64}`;
+  };
+
 </script>
