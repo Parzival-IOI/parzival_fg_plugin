@@ -16,7 +16,7 @@
       "none"
     ],
     "devAllowedDomains": [
-      "https://jsonplaceholder.typicode.com/"
+      "http://localhost:5000/"
     ]
   }
 }

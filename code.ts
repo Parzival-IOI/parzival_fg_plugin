@@ -2,11 +2,29 @@ if (figma.editorType === 'figma') {
 
   figma.showUI(__html__, { themeColors: true, width: 500, height: 300,  title: "Parzival's Plugin" });
 
-  figma.ui.onmessage =  async (msg: {type: string, description: string}) => {
+  figma.ui.onmessage =  async (msg: {type: string, description: string, format: string, base64: string}) => {
 
-    if (msg.type === 'execute') {
+    if (msg.type === 'generate') {
+      console.log("Uploading image...", msg.base64);
+      const response = await fetch('http://localhost:5000/v1/api/gpt/sixer', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOjIsIm5hbWUiOiJzdHJpbmciLCJyb2xlcyI6WyJBRE1JTiJdLCJpYXQiOjE3NDYzNjIzMDcsImV4cCI6MTc0NjM3MzEwN30.jcGnueoOyKCNCdnD8M5PRKLkZpvm1Ry03xeYeiR9ucQ`
+        },
+        body: JSON.stringify({
+          prompt: msg.description,
+          model: 'gpt-4o',
+          max_tokens: "100",
+          baseimage: msg.base64,
+        })
+      });
 
-      figma.ui.postMessage("hi");
+      const data = await response.text();
+      console.log(data);
+
+      figma.ui.postMessage({type: 'response', response: data});
+
     }
     else if (msg.type === 'screenshot') {
 
@@ -29,16 +47,11 @@ if (figma.editorType === 'figma') {
         tempFrame.appendChild(node);
       }
 
-      console.log(figma.currentPage.children)
-
       // Export the frame
       const exportBytes = await tempFrame.exportAsync({
         format: 'PNG',
         constraint: { type: 'SCALE', value: 2 }
       });
-
-      console.log(figma.currentPage.children)
-
 
       // Move nodes back to original page
       for (const node of [...tempFrame.children]) {
@@ -51,22 +64,10 @@ if (figma.editorType === 'figma') {
       // Convert to base64
       const base64 = figma.base64Encode(exportBytes);
 
-      figma.ui.postMessage(base64);
+      figma.ui.postMessage({type: 'image', image: base64});
     }
     else {
       figma.closePlugin();
     }
-  };
-}
-
-if (figma.editorType === 'figjam') {
-  figma.showUI(__html__);
-
-  figma.ui.onmessage = async (msg: {type: string, count: number}) => {
-    if (msg.type === 'create-shapes') {
-      
-    }
-
-    figma.closePlugin();
   };
 }

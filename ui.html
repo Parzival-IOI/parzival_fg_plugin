@@ -35,7 +35,7 @@
     color: var(--figma-color-text);
     font-size: 14px;
   }
-  #create,
+  #generate,
   #cancel {
     background-color: var(--figma-color-bg-secondary);
     color: var(--figma-color-text);
@@ -46,7 +46,7 @@
     font-size: 14px;
     margin-top: 10px;
   }
-  #create:hover,
+  #generate:hover,
   #cancel:hover {
     background-color: var(--figma-color-bg-selected);
   }
@@ -107,7 +107,7 @@
     rows="5"
     placeholder="Description"
   ></textarea>
-  <select class="format">
+  <select class="format" id="format">
     <option value="" selected></option>
     <option value="1">Option 1</option>
     <option value="2">Option 2</option>
@@ -125,9 +125,9 @@
     <img id="upload-image" src="" alt="" class="hidden" />
   </div>
 
-  <div id="data">json</div>
+  <div id="data">data</div>
 
-  <button id="create">Create</button>
+  <button id="generate">Generate</button>
   <button id="cancel">Cancel</button>
 </div>
 
@@ -141,33 +141,43 @@
         const img = document.getElementById(`upload-image`);
         img.classList.remove("hidden");
         img.src = e.target?.result;
-        field.onchange(file);
+        const base64 = e.target?.result;
       };
       reader.readAsDataURL(file);
-
     }
   }
 
   document.getElementById("screenshot").onclick = () => {
-    const description = document.getElementById("description").value;
-    parent.postMessage({pluginMessage: { type: 'screenshot', description } }, '*')
+    parent.postMessage({pluginMessage: { type: 'screenshot' } }, '*')
   };
 
-  document.getElementById("create").onclick = () => {
+  document.getElementById("generate").onclick = () => {
     const description = document.getElementById("description").value;
-    parent.postMessage({pluginMessage: { type: 'execute', description } }, '*')
+    const format = document.getElementById("format").value;
+    const base64 = document.getElementById("upload-image").src;
+    parent.postMessage({pluginMessage: { type: 'generate', description, format, base64 } }, '*')
   };
 
   document.getElementById("cancel").onclick = () => {
     parent.postMessage({ pluginMessage: { type: "cancel" } }, "*");
   };
 
-
   onmessage = (event) => {
-    const base64 = event.data.pluginMessage;
-    const img = document.getElementById(`upload-image`);
-    img.classList.remove("hidden");
-    img.src = `data:image/png;base64,${base64}`;
+
+    if (event.data.pluginMessage.type === "image") {
+      const base64 = event.data.pluginMessage.image;
+      const img = document.getElementById(`upload-image`);
+      img.classList.remove("hidden");
+      img.src = `data:image/png;base64,${base64}`;
+    }
+    else if (event.data.pluginMessage.type === "response") {
+      const response = event.data.pluginMessage.response;
+      const data = document.getElementById("data");
+      data.innerHTML = response;
+    }
+    
+
+    
   };
 
 </script>
