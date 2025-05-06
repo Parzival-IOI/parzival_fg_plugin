@@ -66,6 +66,17 @@ if (figma.editorType === 'figma') {
 
       figma.ui.postMessage({type: 'image', image: base64});
     }
+    else if (msg.type === 'test') {
+      console.log("test");
+      if (figma.currentUser) {
+        console.log("ID:", figma.currentUser.id);
+        console.log("Username:", figma.currentUser.name);
+        figma.ui.postMessage({type: 'test', test: figma.currentUser});
+      } else {
+        console.log("No user info available (possibly in anonymous mode).");
+      }
+      
+    }
     else {
       figma.closePlugin();
     }

@@ -127,6 +127,8 @@
 
   <div id="data">data</div>
 
+  <button id="test">test</button>
+
   <button id="generate">Generate</button>
   <button id="cancel">Cancel</button>
 </div>
@@ -162,6 +164,11 @@
     parent.postMessage({ pluginMessage: { type: "cancel" } }, "*");
   };
 
+  document.getElementById("test").onclick = () => {
+    console.log("test");
+    parent.postMessage({ pluginMessage: { type: "test" } }, "*");
+  };
+
   onmessage = (event) => {
 
     if (event.data.pluginMessage.type === "image") {
@@ -174,6 +181,10 @@
       const response = event.data.pluginMessage.response;
       const data = document.getElementById("data");
       data.innerHTML = response;
+    }
+    else if (event.data.pluginMessage.type === "test") {
+      const test = event.data.pluginMessage.test;
+      console.log(test);
     }
     
 

@@ -5,12 +5,11 @@
   "main": "code.js",
   "capabilities": [],
   "enableProposedApi": false,
-  "documentAccess": "dynamic-page",
   "editorType": [
-    "figma",
-    "figjam"
+    "figma"
   ],
   "ui": "ui.html",
+  "permissions": ["currentuser"],
   "networkAccess": {
     "allowedDomains": [
       "none"
