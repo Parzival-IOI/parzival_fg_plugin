@@ -11,6 +11,13 @@
     scrollbar-width: thin;
     scrollbar-color: var(--figma-color-border) var(--figma-color-bg);
   }
+  input, select {
+    cursor: pointer;
+  }
+  input:disabled, textarea:disabled, select:disabled {
+    color: gray;
+    cursor: not-allowed;
+  }
   .description {
     width: 100%;
     height: 100px;
@@ -21,10 +28,11 @@
     color: var(--figma-color-text);
     font-size: 14px;
     resize: none;
+    cursor: text;
     scrollbar-width: thin;
     scrollbar-color: var(--figma-color-border) var(--figma-color-bg);
   }
-  .format {
+  .format, .type {
     margin-top: 0.5rem;
     width: 100%;
     height: 40px;
@@ -36,7 +44,8 @@
     font-size: 14px;
   }
   #generate,
-  #cancel {
+  #cancel,
+  #test {
     background-color: var(--figma-color-bg-secondary);
     color: var(--figma-color-text);
     border: none;
@@ -45,16 +54,19 @@
     cursor: pointer;
     font-size: 14px;
     margin-top: 10px;
+    transition: background-color 0.3s ease, color 0.3s ease,
+    border-color 0.3s ease;
   }
   #generate:hover,
-  #cancel:hover {
+  #cancel:hover,
+  #test:hover {
     background-color: var(--figma-color-bg-selected);
   }
 
-  .upload-button, .screen-shot-button {
+  .upload-button, .screen-shot-button, .screen-shot-component  {
     display: inline-block;
     padding: 0.5rem 1rem;
-    border: 2px solid #b2bec3;
+    border: 2px solid var(--figma-color-bg-secondary);
     border-radius: 8px;
     background-color:  var(--figma-color-bg);
     color: var(--figma-color-text);
@@ -66,8 +78,9 @@
     border-color 0.3s ease;
   }
 
-  .upload-button:hover, .screen-shot-button:hover{
+  .upload-button:hover, .screen-shot-button:hover, .screen-shot-component:hover{
     background-color: var(--figma-color-bg-selected);
+    border-color: var(--figma-color-bg-selected);
   }
 
   .upload-input {
@@ -78,17 +91,24 @@
     display: none;
   }
 
-  div > #upload-image {
-    margin-top: 0.5rem;
-    width: 10rem;
-    height: 10rem;
+  .image-wrapper {
+    width: calc(99% - 2px);
+    height: 20rem;
+    margin: 0.5rem auto;
+    padding: 1rem 0;
+    border: 1px dashed var(--figma-color-text);
+    border-radius: 8px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    /* cursor:cell; */
   }
   #upload-image {
     width: 100%;
     height: 100%;
     object-fit: contain;
     border-radius: 8px;
-    border: 0.2rem solid var(--figma-color-text);
+    
   }
   .actions {
     display: flex;
@@ -97,50 +117,254 @@
     align-items: center;
     margin-top: 0.5rem;
   }
+
+  #data-wrapper {
+    /* max-height: 15rem; */
+    width: calc(99% - 2px);
+    padding: 1rem 0;
+    margin: 0 auto;
+    /* overflow-y: auto; */
+    border: 1px dashed var(--figma-color-border);
+    border-radius: 0.5rem;
+    scrollbar-width: thin;
+    scrollbar-color: var(--figma-color-border) var(--figma-color-bg);
+  }
+
+  #data {
+    width: 95%;
+    margin: 0 auto 0 auto;
+  }
+  .container-loading {
+    --uib-size: 43px;
+    --uib-speed: 1.3s;
+    --uib-dot-size: calc(var(--uib-size) * 0.24);
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: var(--uib-dot-size);
+    width: var(--uib-size);
+    margin: 0 auto 0 auto
+  }
+
+  .dot,
+  .container-loading::before,
+  .container-loading::after {
+    content: '';
+    display: block;
+    height: var(--uib-dot-size);
+    width: var(--uib-dot-size);
+    border-radius: 50%;
+    background-color: var(--figma-color-text);
+    transform: scale(0);
+    transition: background-color 0.3s ease;
+  }
+
+  .container-loading::before {
+    animation: pulse var(--uib-speed) ease-in-out calc(var(--uib-speed) * -0.375)
+      infinite;
+  }
+
+  .dot {
+    animation: pulse var(--uib-speed) ease-in-out calc(var(--uib-speed) * -0.25)
+      infinite both;
+  }
+
+  .container-loading::after {
+    animation: pulse var(--uib-speed) ease-in-out calc(var(--uib-speed) * -0.125)
+      infinite;
+  }
+
+  @keyframes pulse {
+    0%,
+    100% {
+      transform: scale(0);
+    }
+
+    50% {
+      transform: scale(1);
+    }
+  }
+
+  .empty-image {
+    width: 25%;
+    aspect-ratio: 1/1;
+    color: var(--figma-color-border);
+  }
 </style>
 
+
 <div class="container">
+  <input type="hidden" name="userid" id="userid" >
+  <input type="hidden" name="username" id="username">
   <textarea
     class="description"
     name="description"
     id="description"
     rows="5"
-    placeholder="Description"
-  ></textarea>
-  <select class="format" id="format">
-    <option value="" selected></option>
-    <option value="1">Option 1</option>
-    <option value="2">Option 2</option>
+    placeholder="Give your prompt"
+    
+  >You are a figma developer expert, designing and create figma component base on the image provided.
+
+  You must design the component and it relative position based on the image completely
+  
+  You must be account for layer stacking and overlapping, the back layer must return first in array
+  
+  Output the design figma in below json format:
+  
+  {
+    name: string,
+    x: number,
+    y: number,
+    width: number,
+    height: number,
+    type: string,
+    text: {
+      text: string,
+      font: string,
+      fontWeight: string,
+      fontSize: number,
+      lineHeight: number,
+      letterSpacing: number,
+      alignment: string
+    } | null,
+    image: {
+        link: string
+    } | null,
+    fill: 
+      { 
+          type: "SOLID" | "GRADIENT_LINEAR" | "GRADIENT_RADIAL" | "GRADIENT_ANGULAR" | "GRADIENT_DIAMOND" | "IMAGE" | "VIDEO", 
+          color: 
+          { 
+              r: number, 
+              g: number, 
+              b: number 
+          },
+      }[],
+    opacity: number,
+    cornerRadious: {
+      topLeftRadius: number
+      topRightRadius: number
+      bottomLeftRadius: number
+      bottomRightRadius: number
+      totalRadius: number
+    },
+    rotation: number,
+    arc: {
+      startingAngle: number
+      endingAngle: number
+      innerRadius: number
+    } | null,
+    pointCount: number | null,
+    strokeWeight: number | null,
+    strokeAlign: "OUTSIDE" | "CENTER" | "INSIDE" | null,
+    strokes: {
+      type: "SOLID" | "GRADIENT_LINEAR" | "GRADIENT_RADIAL" | "GRADIENT_ANGULAR" | "GRADIENT_DIAMOND" | "IMAGE" | "VIDEO",
+      color: 
+      { 
+          r: number, 
+          g: number, 
+          b: number 
+      } 
+    }[] | null,
+    ratio: number | null,
+  }[]
+  
+  
+  Output Rule:
+    - You must return all output exactly as the template
+    - You must return only code, no additional text or comment
+    - if it does not have value you can return null except some field such as "name", "x", "y", "width", "height", "type" , "fill", "opacity", "rotation", "cornerRadious".
+    - "type" you must only provide 8 specific value, 
+      ○ Rectangle
+      ○ Line
+      ○ Arrow
+      ○ Ellipse
+      ○ Polygon
+      ○ Start
+      ○ Image
+      ○ Text
+    - If the "type" is "Text" you must provide the "text" object
+    - If the "type" is "Image" you must provide the "image" object
+    - "fill" "type" must provide specific value,
+      ○ SOLID
+    - "text" "fontWeight" must provide specific value 
+      ○ Regular
+      ○ Bold
+      ○ Italic
+      ○ Thin
+      ○ Medium Italic
+      ○ Bold Italic
+    - If the value is number return number not string number
+    - "fill" "color" "r" "g" "b" must be less than or equal to 1  
+  </textarea>
+  <select class="type" id="type">
+    <option value="roaster" selected >DESIGN ROASTER</option>
+    <option value="builder" >INSTANT COMPONENT</option>
+  </select>
+  <select class="format" id="format" >
+    <option value="nn_group" selected>Nielsen Norman Group</option>
+    <option value="other_group">Other Group</option>
   </select>
   <div class="actions">
     <div>
       <label class="upload-button" for="file-upload">Upload a file</label>
       <input type="file" id="file-upload" class="upload-input" />
     </div>
-    <button type="button" class="screen-shot-button" id="screenshot">Screen Shot</button>
+    <button type="button" class="screen-shot-button" id="screenshot">Screenshot</button>
+    <button type="button" class="screen-shot-component" id="screenshot-component">Screenshot Component</button>
   </div>
   
 
-  <div>
+  <div class="image-wrapper">
     <img id="upload-image" src="" alt="" class="hidden" />
+    <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" class="bi bi-images empty-image" id="empty-image" viewBox="0 0 16 16">
+      <path d="M4.502 9a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3"/>
+      <path d="M14.002 13a2 2 0 0 1-2 2h-10a2 2 0 0 1-2-2V5A2 2 0 0 1 2 3a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v8a2 2 0 0 1-1.998 2M14 2H4a1 1 0 0 0-1 1h9.002a2 2 0 0 1 2 2v7A1 1 0 0 0 15 11V3a1 1 0 0 0-1-1M2.002 4a1 1 0 0 0-1 1v8l2.646-2.354a.5.5 0 0 1 .63-.062l2.66 1.773 3.71-3.71a.5.5 0 0 1 .577-.094l1.777 1.947V5a1 1 0 0 0-1-1z"/>
+    </svg>
   </div>
 
-  <div id="data">data</div>
-
-  <button id="test">test</button>
+  <div id="data-wrapper">
+    <div id="data">
+      <div style='color:gray;' >Please click Generate</div>
+    </div>
+  </div>
 
   <button id="generate">Generate</button>
   <button id="cancel">Cancel</button>
+
+  <button id="test">test</button>
+  <div style="height: 1rem;"></div>
+
 </div>
+
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 
 <script>
 
+  window.onload = function () {
+    parent.postMessage({ pluginMessage: { type: "profile" } }, "*");
+  };
+
+  // document.getElementById("type").onchange = (event) => {
+  //   const selected = event.target.value;
+  //   console.log(selected)
+  //   if(selected === "roaster") {
+  //     document.getElementById("description").setAttribute("disabled", "");
+  //     document.getElementById("format").removeAttribute("disabled");
+  //   } else if(selected === "builder") {
+  //     document.getElementById("description").removeAttribute("disabled");
+  //     document.getElementById("format").setAttribute("disabled", "");
+  //   }
+  // }
   document.getElementById("file-upload").onchange = (event) => {
     const file = event.target.files?.[0];
     if (file) {
       const reader = new FileReader();
       reader.onload = (e) => {
         const img = document.getElementById(`upload-image`);
+        const icon = document.getElementById(`empty-image`);
+        icon.classList.add("hidden");
         img.classList.remove("hidden");
         img.src = e.target?.result;
         const base64 = e.target?.result;
@@ -153,29 +377,107 @@
     parent.postMessage({pluginMessage: { type: 'screenshot' } }, '*')
   };
 
-  document.getElementById("generate").onclick = () => {
+  document.getElementById("screenshot-component").onclick = () => {
+    parent.postMessage({ pluginMessage: { type: "screenshot-component" } }, "*");
+  };
+
+  document.getElementById("test").onclick = () => {
+
+    console.log("test");
+    parent.postMessage({ pluginMessage: { type: "test" } }, "*");
+  };
+
+  document.getElementById("generate").onclick = async () => {
+    const data_element = document.getElementById("data");
+
+    data_element.innerHTML =  `<div class="container-loading"><div class="dot"></div></div>`;
+
+    const userid = document.getElementById("userid").value;    
+    const username = document.getElementById("username").value;
+
     const description = document.getElementById("description").value;
+    const type = document.getElementById("type").value;
     const format = document.getElementById("format").value;
     const base64 = document.getElementById("upload-image").src;
-    parent.postMessage({pluginMessage: { type: 'generate', description, format, base64 } }, '*')
+
+    const image = document.getElementById('file-upload').files[0];
+
+    const formData = new FormData()
+    formData.append('id', userid);
+    formData.append('name', username);
+    formData.append('description', description);
+    formData.append('type', type);
+    formData.append('format', format);
+    formData.append('image', image);
+
+    try {
+      const response = await fetch('http://localhost:5000/v1/api/gpt/sixer', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOjIsIm5hbWUiOiJzdHJpbmciLCJyb2xlcyI6WyJBRE1JTiJdLCJpYXQiOjE3NDY4MDIyMDksImV4cCI6MTc0NjgxMzAwOX0.TXbiBrDtRCcPawOGMN3H-c4rm5Qqlxa4MV2nX6gZbUM`
+        },
+        body: formData
+      });
+
+      const response_json = await response.json()
+
+      if(response_json.code !== 200)
+        throw Error(response_json.message);
+
+      let data = response_json.data;
+
+      data_element.innerHTML = marked.parse(data).replaceAll("\\n", "<br/>");
+      
+      // if(type === "builder") {
+        //convert json
+        const json = data.replace("json", "").replaceAll("\\n", "").replaceAll("```", "").replaceAll("\\", "");
+        const scaffold = JSON.parse(json);
+
+        console.log(scaffold)
+        parent.postMessage({ pluginMessage: { type: "build", scaffold } }, "*");
+      // }
+      
+    } catch (e) {
+      data_element.innerHTML = "<div style='color:gray;' >Oops! Something went wrong.</div>"
+      console.log(e)
+    }
+
   };
 
   document.getElementById("cancel").onclick = () => {
     parent.postMessage({ pluginMessage: { type: "cancel" } }, "*");
   };
 
-  document.getElementById("test").onclick = () => {
-    console.log("test");
-    parent.postMessage({ pluginMessage: { type: "test" } }, "*");
-  };
-
+  // catch data from code.ts
   onmessage = (event) => {
 
     if (event.data.pluginMessage.type === "image") {
       const base64 = event.data.pluginMessage.image;
+      const upload = document.getElementById('file-upload');
+
+      //convert file
+      const file = new File(
+        [Uint8Array.from(atob(base64), (m) => m.codePointAt(0))],
+        'component.png',
+        { type: "image/png" }
+      );
+
+      // add file to input
+      const dataTransfer = new DataTransfer();
+      dataTransfer.items.add(file);
+      upload.files = dataTransfer.files;
+
+      // remove the icon and replace by image
+      const icon = document.getElementById(`empty-image`);
+      icon.classList.add("hidden");
+      // add file to image
       const img = document.getElementById(`upload-image`);
       img.classList.remove("hidden");
       img.src = `data:image/png;base64,${base64}`;
+    }
+    else if (event.data.pluginMessage.type === "profile") {
+      document.getElementById("userid").value = event.data.pluginMessage.userid;
+      document.getElementById("username").value = event.data.pluginMessage.username;
     }
     else if (event.data.pluginMessage.type === "response") {
       const response = event.data.pluginMessage.response;
